@@ -25,7 +25,7 @@ public class TelegramClient {
     }
 
     public boolean isConfigured() {
-        return token == null || token.isBlank() || chatId == null || chatId.isBlank();
+        return token != null && !token.isBlank() && chatId != null && !chatId.isBlank();
     }
 
     public String getToken() {
@@ -41,7 +41,7 @@ public class TelegramClient {
     }
 
     public void sendMessage(String message, String threadId) {
-        if (isConfigured()) {
+        if (!isConfigured()) {
             return;
         }
         try {

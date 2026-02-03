@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -25,6 +27,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,8 +55,8 @@ public final class TelegramBridgePlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        sendToTelegram("Server is shutting down.");
         stopPolling();
+        sendToTelegram("Server is shutting down.");
     }
 
     @Override
@@ -71,6 +74,20 @@ public final class TelegramBridgePlugin extends JavaPlugin implements Listener {
         }
         sender.sendMessage("Usage: /telegrambridge reload");
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!command.getName().equalsIgnoreCase("telegrambridge")) {
+            return Collections.emptyList();
+        }
+        if (args.length == 1) {
+            String start = args[0].toLowerCase();
+            if ("reload".startsWith(start)) {
+                return Collections.singletonList("reload");
+            }
+        }
+        return Collections.emptyList();
     }
 
     private void reloadBridgeConfig() {
@@ -102,11 +119,15 @@ public final class TelegramBridgePlugin extends JavaPlugin implements Listener {
         if (!config.getBoolean("telegram.enabled", true)) {
             return;
         }
-        if (telegramClient == null || telegramClient.isConfigured()) {
+        if (telegramClient == null || !telegramClient.isConfigured()) {
             return;
         }
         String prefix = config.getString("format.prefix", "[MC] ");
         String finalMessage = prefix + message;
+        if (!isEnabled()) {
+            telegramClient.sendMessage(finalMessage);
+            return;
+        }
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> telegramClient.sendMessage(finalMessage));
     }
 
@@ -114,7 +135,7 @@ public final class TelegramBridgePlugin extends JavaPlugin implements Listener {
         if (!getConfig().getBoolean("telegram.enable_polling", true)) {
             return;
         }
-        if (telegramClient == null || telegramClient.isConfigured()) {
+        if (telegramClient == null || !telegramClient.isConfigured()) {
             return;
         }
         if (pollingThread != null && pollingThread.isAlive()) {
@@ -127,7 +148,7 @@ public final class TelegramBridgePlugin extends JavaPlugin implements Listener {
                     sleepQuietly(1000);
                     continue;
                 }
-                if (telegramClient == null || telegramClient.isConfigured()) {
+                if (telegramClient == null || !telegramClient.isConfigured()) {
                     sleepQuietly(1000);
                     continue;
                 }
@@ -341,9 +362,15 @@ public final class TelegramBridgePlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerAdvancement(PlayerAdvancementDoneEvent event) {
         if (!isEventEnabled("player_advancement")) return;
-        String key = event.getAdvancement().getKey().getKey();
+        String key = event.getAdvancement().getKey().toString();
+        Component advancementName = event.getAdvancement().displayName();
+        if(key.contains("minecraft:recipe")) return;   // Do not report recipes
+
+        PlainTextComponentSerializer serializer = PlainTextComponentSerializer.plainText();
+        String title = serializer.serialize(advancementName);
+
         String template = getConfig().getString("format.advancement", "{player} advanced: {advancement}");
-        sendToTelegram(formatMessage(template, event.getPlayer().getName(), null, null, null, 0, 0, 0, key));
+        sendToTelegram(formatMessage(template, event.getPlayer().getName(), null, null, null, 0, 0, 0, title));
     }
 
     @EventHandler
