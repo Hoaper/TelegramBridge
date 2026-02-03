@@ -1,0 +1,18 @@
+name: TelegramBridgePlugin
+version: '1.0-SNAPSHOT'
+main: org.telegrambridgeplugin.telegramBridgePlugin.TelegramBridgePlugin
+api-version: '1.21.11'
+author: zh0per
+description: Connect your telegram to Minecraft with Telegram Bridge Plugin!
+commands:
+  telegrambridge:
+    description: "This is a command"
+    usage: "/telegrambridge reload"
+    aliases: [tg, tgbridge]
+    permission: telegrambridge.admin
+    permission-message: "You do not have permission to use this command"
+permissions:
+  telegrambridge.admin:
+    description: Allows full access to all TelegramBridge commands
+    default: op
+load: STARTUP

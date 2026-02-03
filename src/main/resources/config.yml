@@ -1,0 +1,31 @@
+telegram:
+  enabled: true
+  bot_token: "PUT_YOUR_BOT_TOKEN_HERE"
+  chat_id: "your_channel_or_chat_id"
+  timeout_seconds: 10
+  enable_polling: true
+  enable_execute: true
+  allowed_thread_id: ""
+  admin_user_ids:
+    - "123456789"
+
+events:
+  player_join: true
+  player_quit: true
+  player_chat: true
+  player_death: true
+  player_advancement: true
+  block_break: false
+  block_place: false
+  player_command: false
+
+format:
+  prefix: "[MC] "
+  join: "{player} joined the server"
+  quit: "{player} left the server"
+  chat: "<{player}> {message}"
+  death: "{message}"
+  advancement: "{player} advanced: {advancement}"
+  block_break: "{player} broke {block} at {x},{y},{z} in {world}"
+  block_place: "{player} placed {block} at {x},{y},{z} in {world}"
+  player_command: "{player} ran: {message}"
